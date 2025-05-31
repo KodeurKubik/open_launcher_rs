@@ -2,7 +2,7 @@ use std::{
     collections::HashMap,
     error::Error,
     path::PathBuf,
-    process::{Child, Command},
+    process::{Child, Command, Stdio},
 };
 
 use tokio::{fs, sync::broadcast};
@@ -29,6 +29,7 @@ pub struct Launcher {
     progress: events::Progress,
     progress_sender: broadcast::Sender<events::Progress>,
     progress_receiver: broadcast::Receiver<events::Progress>,
+    silent: bool,
 }
 
 fn process_jvm_args(args: &mut Vec<String>, jvm_args: serde_json::Value) {
@@ -262,7 +263,19 @@ impl Launcher {
             },
             progress_sender,
             progress_receiver,
+            silent: false,
         }
+    }
+
+    /// Sets if the process should run silently (false by default)
+    /// # Arguments
+    /// * `silent` - A boolean
+    /// # Example
+    /// ```
+    /// launcher.silent(true);
+    /// ```
+    pub fn silent(&mut self, silent: &bool) {
+        self.silent = *silent;
     }
 
     /// Add a jvm argument to the launch command.
@@ -661,6 +674,21 @@ impl Launcher {
         let mut command = Command::new(&self.java_executable);
         command.args(final_args);
         command.current_dir(self.game_dir.clone());
+
+        // Silent process if defined so
+        if self.silent {
+            #[cfg(unix)]
+            {
+                command.stderr(Stdio::null());
+                command.stdout(Stdio::null());
+            }
+
+            #[cfg(windows)]
+            {
+                command.stderr(Stdio::null());
+                command.stdout(Stdio::null());
+            }
+        }
 
         Ok(command)
     }

@@ -272,10 +272,10 @@ impl Launcher {
     /// * `silent` - A boolean
     /// # Example
     /// ```
-    /// launcher.silent(true);
+    /// launcher.silence(true);
     /// ```
-    pub fn silent(&mut self, silent: &bool) {
-        self.silent = *silent;
+    pub fn silence(&mut self, silent: bool) {
+        self.silent = silent;
     }
 
     /// Add a jvm argument to the launch command.
@@ -677,17 +677,9 @@ impl Launcher {
 
         // Silent process if defined so
         if self.silent {
-            #[cfg(unix)]
-            {
-                command.stderr(Stdio::null());
-                command.stdout(Stdio::null());
-            }
-
-            #[cfg(windows)]
-            {
-                command.stderr(Stdio::null());
-                command.stdout(Stdio::null());
-            }
+            command.stderr(Stdio::null());
+            command.stdout(Stdio::null());
+            command.stdin(Stdio::null());
         }
 
         Ok(command)
